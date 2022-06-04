@@ -22,14 +22,6 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: create container
-        run: docker build . --file Dockerfile -t whs:bwapp
-        
-      - name: start bwapp 
-        run: |
-          docker run -d -p 3005:80 whs:bwapp
-          wget --quiet --wait=3 http://localhost:3005/install.php?install=yes
-
       - name: run security test        
         env:
           LICENSE_KEY: ${{ secrets.LICENSE_KEY }}
