@@ -1,0 +1,53 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: create container
+        run: docker build . --file Dockerfile -t whs:bwapp
+        
+      - name: start bwapp 
+        run: |
+          docker run -d -p 3005:80 whs:bwapp
+          wget --quiet --wait=3 http://localhost:3005/install.php?install=yes
+
+      - name: run security test        
+        env:
+          LICENSE_KEY: ${{ secrets.LICENSE_KEY }}
+        run: |
+          wget https://github.com/whitehatsec/vantage-prevent-distributions/releases/latest/download/VantagePrevent-Ubuntu-20_04.deb          
+          sudo apt-get install -f ./VantagePrevent-Ubuntu-20_04.deb 
+          sudo dast-attacker-cli -allowed-host=https://dev.digitalmxce.com -license-key=${{ secrets.LICENSE_KEY }} -output-json=results.json -output-html=results.html .scan/*.har
+
+      - name: "upload scan results"
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: IDD Scan Results
+          path: results.json
+
+      - name: "upload html report"
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: IDD Scan Report
+          path: results.html
