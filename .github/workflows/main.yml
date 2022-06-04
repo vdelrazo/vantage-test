@@ -28,7 +28,7 @@ jobs:
         run: |
           wget https://github.com/whitehatsec/vantage-prevent-distributions/releases/latest/download/VantagePrevent-Ubuntu-20_04.deb          
           sudo apt-get install -f ./VantagePrevent-Ubuntu-20_04.deb 
-          sudo dast-attacker-cli -allowed-host=https://dev.digitalmxce.com -license-key=${{ secrets.LICENSE_KEY }} -output-json=results.json -output-html=results.html .scan/*.har MVPCLMAPIs.postman_collection.json MVPCLMDEV.postman_environment.json
+          sudo dast-attacker-cli -allowed-host=https://dev.digitalmxce.com -license-key=${{ secrets.LICENSE_KEY }} -output-json=results.json -output-html=results.html MVPCLMAPIs.postman_collection.json MVPCLMDEV.postman_environment.json
 
       - name: "upload scan results"
         if: ${{ always() }}
