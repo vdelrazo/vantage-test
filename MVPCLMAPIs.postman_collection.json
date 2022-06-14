@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "4aa99e1e-df58-4064-bae3-04c5ba392e10",
+		"_postman_id": "b93910fa-49b7-4d8b-98ea-06a4abc76ae4",
 		"name": "MVP CLM APIs",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "9022700"
+		"_exporter_id": "20326094"
 	},
 	"item": [
 		{
@@ -13,7 +13,8 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							""
+							"if (pm.response.json().version)",
+							"    pm.environment.set(\"_affiliation_id\", pm.response.json().version.default_affiliation_id);"
 						],
 						"type": "text/javascript"
 					}
@@ -38,12 +39,51 @@
 			"response": []
 		},
 		{
-			"name": "Customer Sign Up",
+			"name": "Auth Check*",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{_url}}/auth_check",
+					"host": [
+						"{{_url}}"
+					],
+					"path": [
+						"auth_check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Customer Sign Up Register",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
 						"exec": [
+							"// Entra por customers/registrations#create",
+							"",
 							"let date = new Date()",
 							"let y = date.getFullYear();",
 							"let m = `${(date.getMonth()+1)}`.padStart(2,'0');",
@@ -61,6 +101,16 @@
 							"pm.environment.set(\"_birth_date\", adult);",
 							"",
 							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.json().customer)",
+							"    pm.environment.set(\"_customer_id\", pm.response.json().customer.id);"
 						],
 						"type": "text/javascript"
 					}
@@ -97,7 +147,8 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.environment.set(\"jwt\", pm.response.json().token.access);"
+							"if (pm.response.json().token)",
+							"    pm.environment.set(\"jwt\", pm.response.json().token.access);"
 						],
 						"type": "text/javascript"
 					}
@@ -131,6 +182,45 @@
 			"response": []
 		},
 		{
+			"name": "Customer Refresh Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.json().token)",
+							"    pm.environment.set(\"jwt\", pm.response.json().token.access);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{_url}}/sessions/refresh",
+					"host": [
+						"{{_url}}"
+					],
+					"path": [
+						"sessions",
+						"refresh"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Customer Profile*",
 			"request": {
 				"method": "GET",
@@ -142,12 +232,13 @@
 					}
 				],
 				"url": {
-					"raw": "{{_url}}/customers",
+					"raw": "{{_url}}/customers/{{_customer_id}}",
 					"host": [
 						"{{_url}}"
 					],
 					"path": [
-						"customers"
+						"customers",
+						"{{_customer_id}}"
 					]
 				}
 			},
@@ -166,7 +257,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"customer\": {\n        \"names\": \"Modifiñáëì-e'd again\",\n        \"first_surname\": \"Por cinco\",\n        \"last_surname\": \"del Mazo\",\n        \"gender\": \"Male\",\n        \"zip_code\": \"00002\"\n    }\n}",
+					"raw": "{\n    \"customer\": {\n        \"names\": \"Luis Fernando\",\n        \"first_surname\": \"Hernández\",\n        \"last_surname\": \"López\",\n        \"gender\": \"Male\",\n        \"zip_code\": \"06860\",\n        \"email\": \"luis.fernando.h@outlook.com\"\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -174,12 +265,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{_url}}/customers",
+					"raw": "{{_url}}/customers/{{_customer_id}}",
 					"host": [
 						"{{_url}}"
 					],
 					"path": [
-						"customers"
+						"customers",
+						"{{_customer_id}}"
 					]
 				}
 			},
@@ -221,19 +313,38 @@
 			"response": []
 		},
 		{
-			"name": "Transaction Partial",
+			"name": "Show Transactions",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{_url}}/customers/{{_customer_id}}/transactions",
+					"host": [
+						"{{_url}}"
+					],
+					"path": [
+						"customers",
+						"{{_customer_id}}",
+						"transactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Transaction Partial ACC",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
 						"exec": [
-							"var store = \"e061f0eb-73ce-4a89-a7c2-599751ea2a84\"",
-							"var customer = \"21b1958a-d883-418e-a1a1-44b7be4c3d37\"",
-							"var program = \"275c8522-0e44-4907-8064-10c6de6bd638\"",
-							"",
-							"pm.environment.set(\"store_id\", store);",
-							"pm.environment.set(\"customer_id\", customer);",
-							"pm.environment.set(\"program_id\", program);"
+							""
 						],
 						"type": "text/javascript"
 					}
@@ -244,7 +355,118 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"transaction\": {\n        \"cashier_id\": \"1122334455\",\n        \"amount\": \"3500\",\n        \"operation_type\": \"acumula\",\n        \"receipt_number\": \"123\",\n        \"metadata\": {},\n        \"program_id\": \"{{program_id}}\",\n        \"line_items\": [\n            { \"quantity\": 1, \"measurement_unit\": \"piece\", \"unit_price\": 1200, \"sku\": 12344566 }\n        ],\n        \"date\": \"2022-07-24\",\n        \"store_id\": \"{{store_id}}\",\n        \"payment_methods\": [\n            { \"type\": \"\", \"amount\": 10.5, \"installments\": \"1\" },\n            { \"type\": \"tarjeta_credito\", \"amount\": 4.5 },\n            { \"type\": \"femsacoins\", \"amount\": 20 }\n        ],\n        \"customer_id\": \"{{customer_id}}\",\n        \"currency\": \"MXN\"\n    }\n}\n",
+					"raw": "{\n    \"transaction\": {\n        \"cashier_id\": \"1122334455\",\n        \"amount\": \"30\",\n        \"operation_type\": \"ACC\",\n        \"receipt_number\": \"123\",\n        \"metadata\": {},\n        \"affiliation_id\": \"{{_affiliation_id}}\",\n        \"line_items\": [\n            { \"quantity\": 1, \"measurement_unit\": \"piece\", \"unit_price\": 30, \"sku\": \"12344566\" }\n        ],\n        \"date\": \"2022-07-24\",\n        \"payment_methods\": [\n            { \"type\": \"tarjeta_credito\", \"amount\": 30, \"installments\": \"1\" },\n            { \"type\": \"femsacoins\", \"amount\": 10 }\n        ],\n        \"customer_id\": \"{{_customer_id}}\",\n        \"currency\": \"MXN\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{_url}}/transactions",
+					"host": [
+						"{{_url}}"
+					],
+					"path": [
+						"transactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Transaction Partial RED",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"transaction\": {\n        \"cashier_id\": \"1122334455\",\n        \"amount\": \"10\",\n        \"operation_type\": \"REDEEM\",\n        \"receipt_number\": \"123\",\n        \"metadata\": {},\n        \"affiliation_id\": \"{{_affiliation_id}}\",\n        \"line_items\": [\n            { \"quantity\": 1, \"measurement_unit\": \"piece\", \"unit_price\": 10, \"sku\": \"12344566\" }\n        ],\n        \"date\": \"2022-07-24\",\n        \"payment_methods\": [\n            { \"type\": \"femsacoins\", \"amount\": 10 }\n        ],\n        \"customer_id\": \"{{_customer_id}}\",\n        \"currency\": \"MXN\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{_url}}/transactions",
+					"host": [
+						"{{_url}}"
+					],
+					"path": [
+						"transactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Customer Sign Up Pre-Register",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"customer\": {\n        \"mobile_phone\": \"{{_mobile}}\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{_url}}/customers",
+					"host": [
+						"{{_url}}"
+					],
+					"path": [
+						"customers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Transaction Partial",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"transaction\": {\n        \"cashier_id\": \"1122334455\",\n        \"amount\": \"3500\",\n        \"operation_type\": \"ACC\",\n        \"receipt_number\": \"123\",\n        \"metadata\": {},\n        \"affiliation_id\": \"{{_affiliation_id}}\",\n        \"line_items\": [\n            { \"quantity\": 1, \"measurement_unit\": \"piece\", \"unit_price\": 1200, \"sku\": 12344566 }\n        ],\n        \"date\": \"2022-07-24\",\n        \"payment_methods\": [\n            { \"type\": \"\", \"amount\": 10.5, \"installments\": \"1\" },\n            { \"type\": \"tarjeta_credito\", \"amount\": 4.5 },\n            { \"type\": \"femsacoins\", \"amount\": 20 }\n        ],\n        \"customer_id\": \"{{customer_id}}\",\n        \"currency\": \"MXN\"\n    }\n}\n",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -270,13 +492,7 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
-							"var store = \"d43f435a-74b8-4c83-9678-9a82f77253b5\"",
-							"var customer = \"010bea29-94bb-4de2-8926-fb6dfba048b1\"",
-							"var program = \"ec29404d-aa5e-4602-b4dc-845e88099e01\"",
-							"",
-							"pm.environment.set(\"store_id\", store);",
-							"pm.environment.set(\"customer_id\", customer);",
-							"pm.environment.set(\"program_id\", program);"
+							""
 						],
 						"type": "text/javascript"
 					}
@@ -287,7 +503,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"transaction\": {\n        \"cashier_id\": \"1122334455\",\n        \"amount\": \"3500\",\n        \"operation_type\": \"acumula\",\n        \"receipt_number\": \"123\",\n        \"metadata\": {},\n        \"program_id\": \"{{program_id}}\",\n        \"line_items\": [\n            {\n                \"quantity\": 1, \"measurement_unit\": \"piece\", \"unit_price\": 1200, \"sku\": 12344566,\n                \"discount\": 1, \"category\": \"food\", \"taxes_description\": \"IVA\", \"brand\": 0,\n                \"code_bar\": 121421412312, \"taxes\": 15, \"upc\": 0, \"final_price\": 1999\n            }\n        ],\n        \"date\": \"2022-07-24\",\n        \"store_id\": \"{{store_id}}\",\n        \"payment_methods\": [\n            { \"type\": \"\", \"amount\": 10.5, \"installments\": \"1\" },\n            { \"type\": \"tarjeta_credito\", \"amount\": 4.5 },\n            { \"type\": \"femsacoins\", \"amount\": 20 }\n        ],\n        \"customer_id\": \"{{customer_id}}\",\n        \"currency\": \"MXN\"\n    }\n}",
+					"raw": "{\n    \"transaction\": {\n        \"cashier_id\": \"1122334455\",\n        \"amount\": \"3500\",\n        \"operation_type\": \"ACC\",\n        \"receipt_number\": \"123\",\n        \"metadata\": {},\n        \"affiliation_id\": \"{{_affiliation_id}}\",\n        \"line_items\": [\n            {\n                \"quantity\": 1, \"measurement_unit\": \"piece\", \"unit_price\": 1200, \"sku\": 12344566,\n                \"discount\": 1, \"category\": \"food\", \"taxes_description\": \"IVA\", \"brand\": 0,\n                \"code_bar\": 121421412312, \"taxes\": 15, \"upc\": 0, \"final_price\": 1999\n            }\n        ],\n        \"date\": \"2022-07-24\",\n        \"payment_methods\": [\n            { \"type\": \"\", \"amount\": 10.5, \"installments\": \"1\" },\n            { \"type\": \"tarjeta_credito\", \"amount\": 4.5 },\n            { \"type\": \"femsacoins\", \"amount\": 20 }\n        ],\n        \"customer_id\": \"{{customer_id}}\",\n        \"currency\": \"MXN\"\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
